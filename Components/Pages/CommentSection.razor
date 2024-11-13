@@ -1,26 +1,64 @@
-﻿<PageTitle>CommentSection</PageTitle>
+﻿@using Helpers;
+<PageTitle>CommentSection</PageTitle>
 
 <h3>Add a new comment</h3>
+<input placeholder="Add title here..." @bind="commentTitle"/>
 <input placeholder="Add a comment here..." @bind="commentText"/>
 <button @onclick="SubmitComment" >Submit Comment</button>
 <ul>
     @foreach (var comment in comments)
     {
-        <li>@comment.SanitizedComment</li>
+        <li>
+            <p>@comment.SanitizedTitle</p>
+            <p>@comment.SanitizedComment</p>
+            <p>@dateHelper.FormatDate(comment.CreatedTimestamp)</p>
+            <button @onclick="@(e => DeleteComment(comment))">
+                Delete
+            </button>
+        </li>
     }
 </ul>
+<button @onclick="SortComments">Sort Comments</button>
 
 @code {
+    private string? commentTitle;
     private string? commentText;
     private List<UserComment> comments = new();
+    private DateHelper dateHelper = new();
 
     private void SubmitComment()
     {
         if(!string.IsNullOrWhiteSpace(commentText))
         {
-            UserComment newComment = new UserComment(commentText);
-            comments.Add(newComment);
+            UserComment newComment = new UserComment(commentTitle, commentText);
+            if (!CheckIfDuplicateComment(newComment))
+            {
+                comments.Add(newComment);
+            }
+            commentTitle = string.Empty;
             commentText = string.Empty;
         }
+    }
+
+    private bool CheckIfDuplicateComment(UserComment comment)
+    {
+        foreach( var commentToCompare in comments)
+        {
+            if (commentToCompare.Equals(comment))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void SortComments()
+    {
+        comments.Sort();
+    }
+
+    private void DeleteComment(UserComment comment)
+    {
+        comments.Remove(comment);
     }
 }
